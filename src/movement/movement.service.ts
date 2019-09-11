@@ -49,21 +49,21 @@ export class MovementService {
         break;
 
       case "create_debtor":
-        //Declaraciones ejecutadas cuando el resultado de expresión coincide con valorN
+
         break;
 
       case "create_movement":
         try {
-         
+
           let movementType = await this.movement_typeRepository
             .createQueryBuilder()
             .select("movement_type.key")
             .innerJoin("movement_type.categorys", "category")
             .where("category.id = :id", { id: data.IDcategory })
             .getOne();
-          
+
           let accountValuesOld = await this.accountRepository.findOne({ id: data.IDaccount });
-           if (movementType.key == "expense") {
+          if (movementType.key == "expense") {
             if (accountValuesOld.initial_value > data.value) {
               const accountValuesNew = accountValuesOld.initial_value - data.value;
               await this.accountRepository.update(
@@ -78,7 +78,7 @@ export class MovementService {
           } else {
 
             const accountValuesNew = accountValuesOld.initial_value + data.value;
-          
+
             await this.accountRepository.update(
               data.IDaccount,
               {
@@ -106,18 +106,18 @@ export class MovementService {
             .innerJoin("movement.fkAccount", "Account")
             .innerJoin("Category.fkMovementType", "type")
             .where("movement.id = :id", { id: data })
-            .getOne();              
+            .getOne();
 
           if (NewData.fkCategory.fkMovementType.key == "expense") {
-            
-              const accountValuesNew = NewData.fkAccount.initial_value + NewData.value;
-              await this.accountRepository.update(
-                NewData.fkAccount.id,
-                {
-                  initial_value: accountValuesNew,
-                }
-              );
-                   
+
+            const accountValuesNew = NewData.fkAccount.initial_value + NewData.value;
+            await this.accountRepository.update(
+              NewData.fkAccount.id,
+              {
+                initial_value: accountValuesNew,
+              }
+            );
+
           } else {
             const accountValuesNew = NewData.fkAccount.initial_value - NewData.value;
             await this.accountRepository.update(
@@ -134,7 +134,36 @@ export class MovementService {
 
 
       case "update_movement":
-        //Declaraciones ejecutadas cuando el resultado de expresión coincide con valorN
+        const OldValues = await this.movementRepository.createQueryBuilder()
+        .select("","")
+        .innerJoin("movement.fkAccount","")
+        .where("movement.id = :id", { id: data })
+        .getOne();
+
+        if(data.value==OldValues){
+
+
+        }else{
+
+
+        }
+
+        try {
+          await this.movementRepository.update(
+            data.id,
+            {
+              value: data.value,
+              description: data.description,
+              // "fkUser": { id: data.fkuser },
+              // "fkAccountType": { id: data.fktype }
+            }
+          );
+          return { success: "OK" };
+        } catch (error) {
+          return { error: 'TRANSACTION_ERROR', detail: error };
+        }
+
+
         break;
 
       // default:
@@ -157,8 +186,8 @@ export class MovementService {
       .addSelect("category.name", "category")
       .addSelect("account.title", "account")
       .innerJoin("user.accounts", "account")
-      .innerJoin("account.movements", "movements")     
-      .innerJoin("movements.fkCategory", "category") 
+      .innerJoin("account.movements", "movements")
+      .innerJoin("movements.fkCategory", "category")
       .innerJoin("category.fkMovementType", "type")
       .where("user.id = :user_id", { user_id: UserId })
       .andWhere("category.fk_movement_type= :type", { type: typeId })
@@ -169,7 +198,7 @@ export class MovementService {
 
   async createMovement(Movement: MovementCreateDto) {
     try {
-    
+
       await getManager().transaction(async entityManager => {
         await entityManager.save(
           this.movementRepository.create({
